@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# GSD
+.agents
+.planning
+GEMINI.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
