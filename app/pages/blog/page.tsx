@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import { useAuth } from "../../_context/AuthContext";
 import { api } from "../../_hooks/fetcher";
 
@@ -11,6 +12,9 @@ interface PostFeedItem {
     media: string[];
     capa: string | null;
     evento: { id: string; nomeEvento: string } | null;
+    _count?: {
+        comentarios: number;
+    };
 }
 
 export default function BlogPage() {
@@ -101,8 +105,16 @@ export default function BlogPage() {
                                 <h2 className="text-xl font-bold text-ohara-white mb-2 line-clamp-2">
                                     {post.tittle}
                                 </h2>
-                                <div className="text-[var(--accent-color)] text-sm font-semibold mt-4 flex items-center gap-2">
-                                    Clique para ler mais →
+                                <div className="flex items-center justify-between mt-4">
+                                    <div className="text-[var(--accent-color)] text-sm font-semibold flex items-center gap-2">
+                                        Clique para ler mais →
+                                    </div>
+                                    {Boolean(post._count?.comentarios && post._count.comentarios > 0) && (
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                            <MessageSquare size={14} className="text-ohara-blue/80" />
+                                            <span>{post._count?.comentarios}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </Link>
