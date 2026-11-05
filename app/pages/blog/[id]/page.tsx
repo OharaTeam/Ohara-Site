@@ -16,7 +16,8 @@ import {
     Tag,
 } from "lucide-react";
 import { api } from "../../../_hooks/fetcher";
-import { useAuth } from "../../../_context/AuthContext";
+import { useComments } from "../../../_hooks/useComments";
+import { CommentList } from "../../../components/comments/CommentList";
 
 interface Post {
     id: string;
@@ -24,6 +25,8 @@ interface Post {
     content: string;
     media: string[];
     author: {
+        id?: string;
+        discordId?: string;
         globalName: string | null;
         avatarUrl: string;
         roles: { name: string }[];
@@ -33,11 +36,24 @@ interface Post {
     evento: {
         nomeEvento: string;
     } | null;
+    _count?: {
+        comentarios: number;
+    };
 }
 
 export default function LerPostPage() {
     const params = useParams();
     const router = useRouter();
+
+    const postId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
+    const {
+        comments,
+        totalCount,
+        loading: commentsLoading,
+        loadingMore,
+        hasMore,
+        loadMore,
+    } = useComments(postId);
 
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
@@ -313,6 +329,19 @@ export default function LerPostPage() {
                                 />
                             </Link>
                         </div>
+
+                        {/* --- SEÇÃO DE COMENTÁRIOS --- */}
+                        <section id="comentarios" className="mt-12 pt-8 border-t border-white/10">
+                            <CommentList
+                                comments={comments}
+                                totalCount={totalCount || post._count?.comentarios || 0}
+                                loading={commentsLoading}
+                                loadingMore={loadingMore}
+                                hasMore={hasMore}
+                                loadMore={loadMore}
+                                postAuthorId={post.author.id || post.author.discordId}
+                            />
+                        </section>
 
                     </div>
                 </article>
