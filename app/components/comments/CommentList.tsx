@@ -56,6 +56,17 @@ export function CommentList({
         </h3>
       </div>
 
+      {/* --- FORMULÁRIO DE COMENTÁRIO (ACIMA DA LISTA E DO ESTADO VAZIO) --- */}
+      {postId && onSubmitComment && (
+        <div className="mb-8">
+          <CommentForm
+            postId={postId}
+            onSubmitComment={onSubmitComment}
+            onCommentCreated={handleCommentCreated}
+          />
+        </div>
+      )}
+
       {/* --- CARGA INICIAL (SKELETON) --- */}
       {loading && comments.length === 0 && <CommentSkeleton />}
 
@@ -106,23 +117,6 @@ export function CommentList({
               <span>Carregar mais comentários</span>
             )}
           </button>
-        </div>
-      )}
-
-      {/* --- FORMULÁRIO DE COMENTÁRIO --- */}
-      {postId && onSubmitComment && (
-        <div
-          className={`mt-8 ${
-            comments.length > 0 || hasMore
-              ? "pt-6 border-t border-white/10"
-              : "pt-4"
-          }`}
-        >
-          <CommentForm
-            postId={postId}
-            onSubmitComment={onSubmitComment}
-            onCommentCreated={handleCommentCreated}
-          />
         </div>
       )}
     </div>
