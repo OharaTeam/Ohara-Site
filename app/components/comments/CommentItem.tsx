@@ -5,12 +5,13 @@ import { Comment, getMainImageUrl } from '../../_types/comments';
 import { formatRelativeTime } from '../../_utils/formatRelativeTime';
 import { ImageLightbox } from './ImageLightbox';
 
-interface CommentItemProps {
+export interface CommentItemProps {
   comment: Comment;
   postAuthorId?: string;
+  isNew?: boolean;
 }
 
-export function CommentItem({ comment, postAuthorId }: CommentItemProps) {
+export function CommentItem({ comment, postAuthorId, isNew }: CommentItemProps) {
   const [imageError, setImageError] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -47,7 +48,13 @@ export function CommentItem({ comment, postAuthorId }: CommentItemProps) {
   };
 
   return (
-    <article className="p-5 rounded-xl border border-white/10 bg-white/[0.02] flex flex-col gap-3 transition-colors hover:border-white/20">
+    <article
+      className={`p-5 rounded-xl border flex flex-col gap-3 transition-all duration-700 ${
+        isNew
+          ? "border-ohara-pink/60 bg-white/[0.04] shadow-[0_0_20px_rgba(217,70,239,0.25)] ring-1 ring-ohara-pink/50"
+          : "border-white/10 bg-white/[0.02] hover:border-white/20"
+      }`}
+    >
       {/* --- CABEÇALHO DO COMENTÁRIO --- */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
