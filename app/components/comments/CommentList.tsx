@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
-import { Comment } from '../../_types/comments';
+import { Comment, CreateCommentPayload } from '../../_types/comments';
 import { CommentItem } from './CommentItem';
 import { CommentSkeleton } from './CommentSkeleton';
+import { CommentForm } from './CommentForm';
 
 export interface CommentListProps {
   comments: Comment[];
@@ -13,6 +15,8 @@ export interface CommentListProps {
   hasMore: boolean;
   loadMore: () => Promise<void>;
   postAuthorId?: string;
+  postId?: string;
+  onSubmitComment?: (payload: CreateCommentPayload) => Promise<Comment | null>;
 }
 
 export function CommentList({
@@ -23,7 +27,23 @@ export function CommentList({
   hasMore,
   loadMore,
   postAuthorId,
+  postId,
+  onSubmitComment,
 }: CommentListProps) {
+  const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null);
+
+  const handleCommentCreated = (novoComentario: Comment) => {
+    setNewlyCreatedId(novoComentario.id);
+    setTimeout(() => {
+      setNewlyCreatedId(null);
+    }, 3000);
+
+    const el = document.getElementById("comentarios");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="w-full">
       {/* --- TÍTULO DA SEÇÃO --- */}
@@ -62,6 +82,7 @@ export function CommentList({
               key={comment.id}
               comment={comment}
               postAuthorId={postAuthorId}
+              isNew={comment.id === newlyCreatedId}
             />
           ))}
         </div>
@@ -85,6 +106,23 @@ export function CommentList({
               <span>Carregar mais comentários</span>
             )}
           </button>
+        </div>
+      )}
+
+      {/* --- FORMULÁRIO DE COMENTÁRIO --- */}
+      {postId && onSubmitComment && (
+        <div
+          className={`mt-8 ${
+            comments.length > 0 || hasMore
+              ? "pt-6 border-t border-white/10"
+              : "pt-4"
+          }`}
+        >
+          <CommentForm
+            postId={postId}
+            onSubmitComment={onSubmitComment}
+            onCommentCreated={handleCommentCreated}
+          />
         </div>
       )}
     </div>

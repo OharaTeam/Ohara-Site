@@ -53,6 +53,7 @@ export default function LerPostPage() {
         loadingMore,
         hasMore,
         loadMore,
+        createComment,
     } = useComments(postId);
 
     const [post, setPost] = useState<Post | null>(null);
@@ -340,6 +341,8 @@ export default function LerPostPage() {
                                 hasMore={hasMore}
                                 loadMore={loadMore}
                                 postAuthorId={post.author.id || post.author.discordId}
+                                postId={postId}
+                                onSubmitComment={createComment}
                             />
                         </section>
 
