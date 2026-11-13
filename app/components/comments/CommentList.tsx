@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { MessageSquare, Loader2 } from 'lucide-react';
-import { Comment, CreateCommentPayload } from '../../_types/comments';
-import { CommentItem } from './CommentItem';
-import { CommentSkeleton } from './CommentSkeleton';
-import { CommentForm } from './CommentForm';
+import { useState } from "react";
+import { MessageSquare, Loader2 } from "lucide-react";
+import { Comment, CreateCommentPayload } from "../../_types/comments";
+import { useNotification } from "../../_context/NotificationContext";
+import { CommentItem } from "./CommentItem";
+import { CommentSkeleton } from "./CommentSkeleton";
+import { CommentForm } from "./CommentForm";
+import { DeleteCommentModal } from "./DeleteCommentModal";
 
 export interface CommentListProps {
   comments: Comment[];
@@ -17,6 +19,7 @@ export interface CommentListProps {
   postAuthorId?: string;
   postId?: string;
   onSubmitComment?: (payload: CreateCommentPayload) => Promise<Comment | null>;
+  onDeleteComment?: (commentId: string) => Promise<void>;
 }
 
 export function CommentList({
@@ -29,8 +32,13 @@ export function CommentList({
   postAuthorId,
   postId,
   onSubmitComment,
+  onDeleteComment,
 }: CommentListProps) {
+  const { notify } = useNotification();
   const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null);
+  const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
 
   const handleCommentCreated = (novoComentario: Comment) => {
     setNewlyCreatedId(novoComentario.id);
@@ -41,6 +49,24 @@ export function CommentList({
     const el = document.getElementById("comentarios");
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!commentToDelete || !onDeleteComment) return;
+
+    setIsDeleting(true);
+    try {
+      await onDeleteComment(commentToDelete.id);
+      // Marca o ID para transição suave de fade-out
+      setDeletedCommentIds((prev) => [...prev, commentToDelete.id]);
+      setCommentToDelete(null);
+      notify("Comentário excluído com sucesso!", "success");
+    } catch (err) {
+      console.error("Erro ao excluir comentário:", err);
+      notify("Erro ao excluir comentário. Tente novamente.", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -94,6 +120,8 @@ export function CommentList({
               comment={comment}
               postAuthorId={postAuthorId}
               isNew={comment.id === newlyCreatedId}
+              onDeleteRequest={(c) => setCommentToDelete(c)}
+              isDeleted={deletedCommentIds.includes(comment.id)}
             />
           ))}
         </div>
@@ -119,6 +147,19 @@ export function CommentList({
           </button>
         </div>
       )}
+
+      {/* --- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (INSTÂNCIA ÚNICA) --- */}
+      <DeleteCommentModal
+        isOpen={Boolean(commentToDelete)}
+        comment={commentToDelete}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          if (!isDeleting) {
+            setCommentToDelete(null);
+          }
+        }}
+      />
     </div>
   );
 }

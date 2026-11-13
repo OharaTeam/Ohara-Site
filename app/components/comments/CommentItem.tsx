@@ -1,26 +1,46 @@
 "use client";
 
-import { useState } from 'react';
-import { Comment, getMainImageUrl } from '../../_types/comments';
-import { formatRelativeTime } from '../../_utils/formatRelativeTime';
-import { ImageLightbox } from './ImageLightbox';
+import { useState } from "react";
+import { Trash2, ShieldAlert } from "lucide-react";
+import { Comment, getMainImageUrl } from "../../_types/comments";
+import { formatRelativeTime } from "../../_utils/formatRelativeTime";
+import { useAuth } from "../../_context/AuthContext";
+import { ImageLightbox } from "./ImageLightbox";
 
 export interface CommentItemProps {
   comment: Comment;
   postAuthorId?: string;
   isNew?: boolean;
+  onDeleteRequest?: (comment: Comment) => void;
+  isDeleting?: boolean;
+  isDeleted?: boolean;
 }
 
-export function CommentItem({ comment, postAuthorId, isNew }: CommentItemProps) {
+export function CommentItem({
+  comment,
+  postAuthorId,
+  isNew,
+  onDeleteRequest,
+  isDeleted,
+}: CommentItemProps) {
+  const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const { author } = comment;
   const displayName = author.globalName || author.username;
-  const initial = (displayName[0] || '?').toUpperCase();
-  const isDev = author.roles?.some((r) => r.name.toLowerCase() === 'dev');
+  const initial = (displayName[0] || "?").toUpperCase();
+  const isDev = author.roles?.some((r) => r.name.toLowerCase() === "dev");
   const isAuthor = Boolean(postAuthorId && author.id === postAuthorId);
+
+  // Verificação RBAC: autor original ou usuário com cargo administrativo Dev
+  const isOwner = Boolean(user && user.discordId === author.id);
+  const isDevUser = Boolean(
+    user?.roles?.some((r) => r.toLowerCase() === "dev")
+  );
+  const canDelete = isOwner || isDevUser;
+  const isDevModerating = isDevUser && !isOwner;
 
   const { relative, full } = formatRelativeTime(comment.createdAt);
   const imageUrl = getMainImageUrl(comment);
@@ -49,9 +69,11 @@ export function CommentItem({ comment, postAuthorId, isNew }: CommentItemProps) 
 
   return (
     <article
-      className={`p-5 rounded-xl border flex flex-col gap-3 transition-all duration-700 ${
-        isNew
-          ? "border-ohara-pink/60 bg-white/[0.04] shadow-[0_0_20px_rgba(217,70,239,0.25)] ring-1 ring-ohara-pink/50"
+      className={`group p-5 rounded-xl border flex flex-col gap-3 transition-all duration-300 ${
+        isDeleted
+          ? "opacity-0 scale-95 pointer-events-none"
+          : isNew
+          ? "border-ohara-pink/60 bg-white/[0.04] shadow-[0_0_20px_rgba(217,70,239,0.25)] ring-1 ring-ohara-pink/50 duration-700"
           : "border-white/10 bg-white/[0.02] hover:border-white/20"
       }`}
     >
@@ -99,6 +121,19 @@ export function CommentItem({ comment, postAuthorId, isNew }: CommentItemProps) 
             </time>
           </div>
         </div>
+
+        {/* --- BOTÃO DE EXCLUSÃO / MODERAÇÃO RBAC --- */}
+        {canDelete && onDeleteRequest && (
+          <button
+            type="button"
+            onClick={() => onDeleteRequest(comment)}
+            title={isDevModerating ? "Moderar comentário" : "Excluir comentário"}
+            aria-label={isDevModerating ? "Moderar comentário" : "Excluir comentário"}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100 focus-visible:outline-none opacity-90 sm:opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+          >
+            {isDevModerating ? <ShieldAlert size={16} /> : <Trash2 size={16} />}
+          </button>
+        )}
       </div>
 
       {/* --- CORPO DO TEXTO --- */}
