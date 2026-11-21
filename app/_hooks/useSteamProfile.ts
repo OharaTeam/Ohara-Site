@@ -93,15 +93,13 @@ export function useSteamProfile(discordId: string) {
         async (steamUrl: string): Promise<boolean> => {
             try {
                 await api.put(`/users/me/steam/add`, { steamUrl });
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                await fetchSummary();
                 return true;
             } catch {
                 return false;
             }
         },
-        []
+        [fetchSummary]
     );
 
     return { summary, loading, error, fetchGames, saveShowcase, reload: fetchSummary, registerSteam };

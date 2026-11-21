@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useNotification } from "@/app/_context/NotificationContext";
 import { useSteamProfile, SteamGame } from "@/app/_hooks/useSteamProfile";
-import { useProfile } from "@/app/_hooks/useProfile";
+import { MemberProfile } from "@/app/_hooks/useProfile";
 import {
     Gamepad2,
     Clock,
@@ -28,15 +28,19 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
     return result;
 }
 
-export default function SteamProfile() {
+interface SteamProfileProps {
+    profile?: MemberProfile | null;
+    onProfileUpdated?: () => Promise<void> | void;
+}
+
+export default function SteamProfile({ profile, onProfileUpdated }: SteamProfileProps = {}) {
     const params = useParams();
     const discordId = params.discordId as string;
     const { user } = useAuth();
     const { notify } = useNotification();
     const isOwner = user?.discordId === discordId;
 
-    const { profile: userProfile, loading: profileLoading } = useProfile(discordId);
-    const hasSteamConnection = userProfile?.connections?.some((c: any) => c.provider === 'steam') ?? false;
+    const hasSteamConnection = profile?.connections?.some((c: any) => c.provider === 'steam') ?? false;
 
     const { summary, loading, error, fetchGames, saveShowcase, registerSteam } = useSteamProfile(discordId);
 
@@ -120,7 +124,7 @@ export default function SteamProfile() {
     };
 
     /* ─────────── render guards ─────────── */
-    if (loading || profileLoading) {
+    if (loading) {
         return (
             <div className="flex items-center gap-3 py-4 text-gray-500 text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -165,7 +169,10 @@ export default function SteamProfile() {
                             const ok = await registerSteam(steamUrlInput);
                             setRegistering(false);
                             if (ok) {
-                                notify("Conta Steam vinculada com sucesso! Recarregando página...", "success");
+                                if (onProfileUpdated) {
+                                    await onProfileUpdated();
+                                }
+                                notify("Conta Steam vinculada com sucesso!", "success");
                             } else {
                                 notify("Erro ao vincular conta Steam. Verifique a URL.", "error");
                             }

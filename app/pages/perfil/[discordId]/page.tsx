@@ -237,7 +237,7 @@ export default function ProfilePage() {
                     <div className="mb-5 h-px w-full opacity-20 rounded-full" style={{ backgroundColor: userColor }} />
 
                     <div className='min-h-[80px] mb-5'>
-                        <SteamProfile />
+                        <SteamProfile profile={profile} onProfileUpdated={reload} />
                     </div>
 
                     {/* Divisória */}
